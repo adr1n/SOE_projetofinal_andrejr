@@ -1,8 +1,8 @@
 # Termo de Abertura do Projeto
 
-- **Nome do Projeto:**
-- **Data de Início:**
-- **Data de Término:**
+- **Nome do Projeto: Assistente de Voz para Automação Residencial**
+- **Data de Início: 28/08/2026**
+- **Data de Término: 04/12/2026**
 
 ## Visão Geral do Projeto
 
@@ -34,7 +34,7 @@ Identifiquem as pessoas, grupos ou organizações que possuem interesse ou podem
 
 | **Nome** | **Matrícula** | **Curso** | **Funções** |
 |----------|---------------|-----------|-------------|
-| | | | |
+|André Jacinto Rodrigues|221007822|Engenharia Eletrônica|Líder|
 | | | | |
 
 ### Orçamento estimado (R$)
