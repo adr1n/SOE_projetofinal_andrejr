@@ -4,25 +4,21 @@
 |:------:|----------------|---------------|--------------------|-----------------|
 | 1 | **Sub-sistema: Hardware** | | | |
 | 1.1 | Processamento | | | |
-| 1.2 | Sensor 1 | | | |
-| 1.3 | Sensor 2 | | | |
-| 1.4 | Controle 1 | | | |
-| 1.5 | Controle 2 | | | |
-| 1.6 | Comunicação 1 | | | |
-| 1.7 | Comunicação 2 | | | |
-| 1.8 | Alimentação | | | |
+| 1.2 | Microfone | | | |
+| 1.3 | Auto - Falante| | | |
+| 1.4 | Placa de Som| | | |
+| 1.5 | Alimentação | | | |
 | 2 | **Sub-sistema: Software** | | | |
-| 2.1 | Controle | | | |
-| 2.2 | Navegação | | | |
-| 2.3 | Interface | | | |
-| 2.4 | Diagnóstico | | | |
-| 2.5 | | | | |
-| 2.6 | | | | |
-| 2.7 | | | | |
+| 2.1 | Módulo de Entrada de Áudio e Wake Word | | | |
+| 2.2 | STT (Speech-to-text) | | | |
+| 2.3 | TTS (Text-to-speech) | | | |
+| 2.4 | Módulo de Processamento Semântico | | | |
+| 2.5 | Calendário | | | |
+| 2.6 | Agenda | | | |
+| 2.7 | Comunicação com Lâmpada Inteligente | | | |
+| 2.8 | Lista de Compras | | | |
+| 2.9 | Comunicação com Site de Clima | | | |
 | 3 | **Sub-sistema: Estrutura** | | | |
-| 3.1 | Chassi | | | |
-| 3.2 | Suporte | | | |
-| 3.3 | Carenagem | | | |
-| 3.4 | Atuadores | | | |
-| 3.5 | Transmissão | | | |
-| 3.6 | Rodas/Hélices | | | |
+| 3.1 | Suporte para Rasp| | | |
+| 3.2 | Suporte para Microfone| | | |
+| 3.3 | Suporte para Caixa de Som| | | |

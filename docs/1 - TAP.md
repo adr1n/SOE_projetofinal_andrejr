@@ -10,7 +10,7 @@
 
 <!-- Descrevam de forma objetiva o problema que o projeto pretende solucionar. Indiquem quem é afetado pelo problema e quais são suas principais características. -->
 
-Este projeto tem como objetivo proporcionar uma de interagir com uma automação residencial por comando de voz. Este produto é geralmente utilizado pelos mais diversos usuários, mas com o objetivo de controlar, em exemplo: lâmpadas, ar condicionados e demais equipamentos inteligentes como tvs, geladeiras, caixas de som, projetores, etc. Sendo assim, o projeto busca integrar um Assistente de Voz ao próprio Home Assistant nativo do Raspberry Pi OS para automação residencial.
+Este projeto tem como objetivo proporcionar uma forma de interagir com uma automação residencial por comando de voz. Este produto é geralmente utilizado pelos mais diversos tipos usuários, mas com o objetivo de controlar, em exemplo: lâmpadas, ar condicionados e demais equipamentos inteligentes como tvs, geladeiras, caixas de som, projetores, etc. Sendo assim, o projeto busca integrar um Assistente de Voz ao próprio Home Assistant nativo do Raspberry Pi OS para automação residencial.
 
 ### Estado da arte
 
@@ -18,8 +18,9 @@ Este projeto tem como objetivo proporcionar uma de interagir com uma automação
 
 As informações utilizadas devem ser fundamentadas em fontes confiáveis e devidamente referenciadas na última seção deste documento utilizando [este formato](https://researchguides.njit.edu/ieee-citation/ieeereferencing). -->
 
-Atualmente, existem soluções comerciais disponíveis no mercado como o Echo Dot (dispositivo com microfone e auto-falante) com a Alexa (assistente virtual que processa comandos de voz). Como o objetivo do projeto é montar tanto o dispositivo estilo Echo Dot quanto instalar um assistente virtual neste, seria interessante utilizar da Alexa para isto. Porém, a Amazon acabou com a distribuição do software da Alexa para uso livre na Raspberry Pi 3, inviabilizando o uso desta ferramenta.
+Atualmente, existem soluções comerciais disponíveis no mercado como o Echo Dot (dispositivo com microfone e auto-falante) com a Alexa (assistente virtual que processa comandos de voz). Este é capaz de tocar música, participar de brincadeiras, acionar dispositivos inteligentes e ser controlado por voz e por aplicativo.
 
+Há também no mercado o 
 Há também a opção de utilizar ferramentas para processamento de áudio em texto rodando localmente na raspberry como o Vosk [1], o WHisper.cpp/FastWhisper [2], as quais provavelmente serão utilizadas.
 
 Para o processamento de Palavra de Ativação (Wake Word) há bibliotecas como o Open Wake Word [3] que rodam localmente na Rasp e processam palavras como "Alexa!" ou "Ok, Google" para ativar o Whisper que irá processar a fala em texto. Há ainda o Speex [4] que serve para a supressão de ruído exclusivamente para a fala.
@@ -32,23 +33,47 @@ Por fim, para completar o ciclo de interação humana tornando o assistente capa
 
 #### Objetivo Geral
 
-Desenvolver um sistema distribuído e embarcado de assistente de voz para automação residencial executado em Raspberry Pi, capaz de realizar processamento e detecção local de comandos de fala, interpretar a intenção do usuário por meio de inteligência artificial generativa e executar ações físicas e lógicas em tempo real com atualização de interface gráfica.
+Desenvolver um sistema distribuído e embarcado de assistente de voz para automação residencial capaz de realizar processamento e detecção local de comandos de fala, interpretar a intenção do usuário por meio de inteligência artificial generativa e executar ações físicas e lógicas em tempo real com atualização de interface gráfica.
 
 #### Objetivos Específicos
 
-- Implementar a detecção local da palavra de ativação (wake word) em tempo real no hardware embarcado via openwakeword, garantindo baixa latência e consumo reduzido de processamento.  
+- Integrar um motor de conversão de fala em texto (Speech-to-Text - STT) transcrição eficiente dos comandos de áudio capture após o acionamento da palavra de chave.
 
-- Integrar um motor de conversão de fala em texto (Speech-to-Text - STT) local e offline baseado em Vosk para transcrição eficiente dos comandos de áudio capture após o acionamento da palavra de chave.
+- Processar a fala e converter isto em comandos
 
-- Estruturar a comunicação de dados via API com o modelo Google Gemini utilizando Structured Outputs (Pydantic) para garantir a conversão precisa e determinística da linguagem natural em esquemas JSON padronizados.
+- Gerenciar uma agenda, um calendario, uma lista de compras
 
-- Criar um dispatcher em Python responsável pela leitura do arquivo JSON gerado e pelo acionamento dos atuadores (relés, GPIOs e protocolos de automação).
+- Comunicar-se com uma lâmpada inteligente
 
-- Implementar a síntese de voz local (Text-to-Speech - TTS) utilizando o Piper TTS (com modelos em Português do Brasil), permitindo que o sistema responda audivelmente pela caixa de som conectada à placa.
+- Atender às necessidades dos stakeholders
+
+- Implementar a síntese de voz local (Text-to-Speech - TTS) permitindo que o sistema responda audivelmente pela caixa de som conectada à placa.
+
 
 ### Escopo do Projeto
 
-1. **Módulo de Entrada de Áudio e Wake Word:** Algoritmo de captura contínua de áudio via microfone USB/HAT e detecção local offline da palavra de chamada no Raspberry Pi.
+O dispositivo deve ser capaz de:
+
+- Receber comandos de voz
+
+- Responder a comandos de voz de forma audível
+
+- Buscar em um site informações de clima/tempo e falar como está.
+
+- Responder qual dia é hoje.
+
+- Ser capaz de agendar tarefas/eventos e armazená-los.
+
+- Falar quais são os eventos/tarefas agendados para os próximos dias.
+
+- Acionar uma lâmpada inteligente.
+
+- Anotar ítens em uma lista de compras.
+
+- Falar a lista de compras quando solicitado.
+
+
+<!-- 1. **Módulo de Entrada de Áudio e Wake Word:** Algoritmo de captura contínua de áudio via microfone USB/HAT e detecção local offline da palavra de chamada no Raspberry Pi.
 
 2. **Módulo de Transcrição (STT Local):** Processamento local da voz capturada em arquivo/stream e conversão para texto usando modelos otimizados (Vosk/Kaldi).
 
@@ -58,9 +83,7 @@ Desenvolver um sistema distribuído e embarcado de assistente de voz para automa
 
 5. **Módulo de Resposta Sonora (TTS Local - Piper):** Geração local e execução de áudio em Português do Brasil utilizando o Piper TTS para dar retorno falado ao usuário logo após a interpretação do comando.
 
-6. **Módulo de Controle de Hardware:** Aplicação Python executada como daemon/serviço no Raspberry Pi para chaveamento dos pinos GPIO (relés/dispositivos simulação).
-
-7. **Circuito Protótipo:** Circuito com LEDs que simulam uma casa, são conectados aos GPIOs da Rasp.
+6. **Módulo de Controle de Hardware:** Aplicação Python executada como daemon/serviço no Raspberry Pi para chaveamento dos pinos GPIO (relés/dispositivos simulação). -->
 
 
 <!-- Descrevam o que será desenvolvido no projeto e **delimitem claramente** aquilo que faz parte e não faz parte do escopo. -->
@@ -68,7 +91,7 @@ Desenvolver um sistema distribuído e embarcado de assistente de voz para automa
 ### _Stakeholders_
 
 <!-- Identifiquem as pessoas, grupos ou organizações que possuem interesse ou podem ser afetados pelo projeto, indicando, quando pertinente, sua relação com o projeto. -->
-
+Possíveis usuários serão homens/mulheres que cuidam de uma casa com ou sem crianças que trabalham e precisam se lembrar de rotinas, eventos, controlar coisas em sua casa, listar coisas para comprar, saber como está o clima para se arrumar de manhã.
 
 ## Recursos do Projeto
 
@@ -89,6 +112,7 @@ Desenvolver um sistema distribuído e embarcado de assistente de voz para automa
 | **Microfone Omnidirecional / Webcam** | Gravação de áudio| 1 | R$ 0,00 *(Já possui)* |
 | **Caixa de Som Auxiliar** | Caixa (Conexão via P2 na placa USB) | 1 | R$ 0,00 *(Já possui)* |
 | **Custo de APIs (Gemini)** | Plano gratuito (Free Tier) até 15 requisições/minuto | - | R$ 0,00 |
+| **Lâmpada Inteligente** | Simples com conexão Wi-Fi | 1 | R$ 20,00 - R$ 30,00 |
 <!-- Discutam dentro da equipe a verba possível disponível para o desenvolvimento do projeto, com base na complexidade do projeto, na quantidade de membros e na realidade de cada um. -->
 
 ### Esforço estimado (horas)
