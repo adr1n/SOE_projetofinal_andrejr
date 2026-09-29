@@ -1,6 +1,7 @@
 # Geral
 .DS_Store
 .vscode
+src/backend/Python/API/
 
 # Adicione outros arquivos a serem ignorados aqui
 # ...
