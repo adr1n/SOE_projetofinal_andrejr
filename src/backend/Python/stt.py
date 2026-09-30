@@ -5,7 +5,7 @@ import time
 import sounddevice as sd
 from groq import Groq
 
-with open("groq_api_key") as key:
+with open("API/groq_whisper_api") as key:
     api_key = key.read().strip()
     print(f"Groq API: {api_key}")
     # os.environ["GROQ_API_KEY"] = api_key
@@ -67,3 +67,5 @@ if __name__ == "__main__":
     buffer = gravar_audio_comando(duracao_segundos=3)
     texto_transcrito = transcrever_com_groq(buffer)
     print(f"\n[Resultado da Transcrição]: \"{texto_transcrito}\"")
+    with open(f"Comandos/comando_{int(time.time())}.txt", "w") as f:
+        f.write(texto_transcrito)

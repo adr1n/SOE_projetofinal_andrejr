@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from google import genai
 from google.genai import types
 
@@ -16,13 +17,15 @@ Regras de Mapeamento:
 6. Anotar lista de compras -> tipo_comando: "ADICIONAR_COMPRAS" (item_compra)
 7. Falar lista de compras -> tipo_comando: "LISTAR_COMPRAS"
 8. Outros assuntos -> tipo_comando: "CONVERSA_GERAL" (forneça a resposta em conteudo.resposta_texto de forma sucinta para voz).
+9. Sempre retorne um JSON válido, mesmo que a entrada seja confusa ou irreconhecível.
+10. Nunca retorne texto fora do JSON. Sempre siga o schema definido.
 """
 
 def api_config():
     # 1. Tenta carregar a chave de API do arquivo se não estiver na variável de ambiente
     if not os.environ.get("GEMINI_API_KEY"):
         try:
-            with open("gemini_api.txt", "r") as f:
+            with open("API/gemini_api.txt", "r") as f:
                 print("[Info]: Carregando GEMINI_API_KEY do arquivo 'gemini_api.txt'.")
                 os.environ["GEMINI_API_KEY"] = f.read().strip()
         except FileNotFoundError:
@@ -102,14 +105,19 @@ def main(client=None, RESPONSE_SCHEMA=None):
         "Ligue a luz da cozinha por favor",
         "Anota leite e pão na lista de compras",
         "O que eu tenho agendado para amanhã?",
-        "Como está o tempo hoje?"
+        "..",
+        "Oi"
     ]
 
-    for comando in testes:
-        print(f"\n[Entrada Voz]: \"{comando}\"")
-        resultado = processar_comando_voz(client, RESPONSE_SCHEMA, comando)
-        print(f"[JSON Estruturado]: {json.dumps(resultado, ensure_ascii=False, indent=2)}")
+    with open("Comandos/comando_voz.txt", "r") as f:
+        comando = f.read().strip()
 
+    # for comando in testes:
+    print(f"\n[Entrada Voz]: \"{comando}\"")
+    resultado = processar_comando_voz(client, RESPONSE_SCHEMA, comando)
+    print(f"[JSON Estruturado]: {json.dumps(resultado, ensure_ascii=False, indent=2)}")
+    with open(f"Comandos/comando_{int(time.time())}.json", "w") as f:
+        json.dump(resultado, f, ensure_ascii=False, indent=2)
 # --- Teste de Execução ---
 if __name__ == "__main__":
     client, RESPONSE_SCHEMA = api_config()
