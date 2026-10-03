@@ -12,8 +12,8 @@
 | 8 | Lista de Compras | O Sistema deve gerenciar uma lista de compras | 4 | | |
 | 9 | Agenda | O sistema deve ser capaz de gerenciar uma agenda | 4 | | |
 | 10 | Site com Clima| O sistema deve ser capaz de comunicar-se com o site e extrair informações de clima e tempo | 4 | | |
-| 11 | | | | | |
-| 12 | | | | | |
+| 11 | Enviar Lista de Compras| O Sistema deve ser capaz de enviar a lista de compras para o usuário por alguma forma (ex. Telegram)| | | |
+| 12 | Enviar a Agenda | O sistema deve ser capaz de enviar alertas de eventos da agenda ao usuário por algum meio (ex. Telegram) | | | |
 | 13 | | | | | |
 | 14 | | | | | |
 | 15 | | | | | |
