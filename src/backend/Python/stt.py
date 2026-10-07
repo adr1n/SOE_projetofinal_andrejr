@@ -54,7 +54,7 @@ def transcrever_com_groq(buffer_audio: io.BytesIO) -> str:
         response_format="text"
     )
     
-    latencia = (time.time() - inicio) * 1000
+    latencia = (time.time() - inicio) * 1000 #calcula latencia
     print(f"[STT Groq]: Concluído em {latencia:.0f} ms!")
     return transcription.strip()
 
