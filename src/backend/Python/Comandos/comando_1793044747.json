@@ -1,6 +1,0 @@
-{
-  "tipo_comando": "ACIONAR_LAMPADA",
-  "conteudo": {
-    "estado_lampada": "ligar"
-  }
-}
