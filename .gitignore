@@ -2,7 +2,8 @@
 .DS_Store
 .vscode
 src/backend/Python/API/
-
+*.venv
+src/backend/Python/Comandos
 # Adicione outros arquivos a serem ignorados aqui
 # ...
 

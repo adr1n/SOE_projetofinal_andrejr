@@ -109,15 +109,15 @@ def main(client=None, RESPONSE_SCHEMA=None):
         "Oi"
     ]
 
-    with open("Comandos/comando_voz.txt", "r") as f:
-        comando = f.read().strip()
+    # with open("Comandos/comando_voz.txt", "r") as f:
+    #     comando = f.read().strip()
 
-    # for comando in testes:
-    print(f"\n[Entrada Voz]: \"{comando}\"")
-    resultado = processar_comando_voz(client, RESPONSE_SCHEMA, comando)
-    print(f"[JSON Estruturado]: {json.dumps(resultado, ensure_ascii=False, indent=2)}")
-    with open(f"Comandos/comando_{int(time.time())}.json", "w") as f:
-        json.dump(resultado, f, ensure_ascii=False, indent=2)
+    for comando in testes:
+        print(f"\n[Entrada Voz]: \"{comando}\"")
+        resultado = processar_comando_voz(client, RESPONSE_SCHEMA, comando)
+        print(f"[JSON Estruturado]: {json.dumps(resultado, ensure_ascii=False, indent=2)}")
+        with open(f"./Comandos/comando_{int(time.time())}.json", "w") as f:
+            json.dump(resultado, f, ensure_ascii=False, indent=2)
 # --- Teste de Execução ---
 if __name__ == "__main__":
     client, RESPONSE_SCHEMA = api_config()

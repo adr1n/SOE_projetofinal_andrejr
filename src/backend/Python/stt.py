@@ -64,8 +64,8 @@ if __name__ == "__main__":
     #    api_key = file.read()
     #    print(api_key)
 
-    buffer = gravar_audio_comando(duracao_segundos=3)
+    buffer = gravar_audio_comando(duracao_segundos=5)
     texto_transcrito = transcrever_com_groq(buffer)
     print(f"\n[Resultado da Transcrição]: \"{texto_transcrito}\"")
-    with open(f"Comandos/comando_{int(time.time())}.txt", "w") as f:
+    with open(f"comando_voz.txt", "w") as f:
         f.write(texto_transcrito)
