@@ -344,3 +344,6 @@ TSWLatexianTemp*
 Thumbs.db
 
 groq_api_key
+src/backend/testeWakeWord/onnxruntime-linux-aarch64-*.tgz
+src/backend/testeWakeWord/oww
+src/backend/testeWhisperAPI/groq_api_key
