@@ -1,3 +1,4 @@
+
 // g++ -O2 -std=c++17 -Wall despachante.cpp -o despachante
 //
 // Uso:
@@ -16,6 +17,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include "armazenamento.hpp"
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -23,32 +25,74 @@ using json = nlohmann::json;
 // ======================================================================
 // AÇÕES: implemente o corpo de cada função (GPIO, SQLite, Piper TTS...)
 // ======================================================================
+
+void acao_responder(const std::string& texto) {
+    std::cout << "[ACAO] falar (TTS): " << texto << "\n";
+}
+
+
 void acao_acionar_lampada(bool ligar) {
     std::cout << "[ACAO] lampada " << (ligar ? "LIGADA" : "DESLIGADA") << "\n";
 }
-void acao_adicionar_compra(const std::string& item) {
-    std::cout << "[ACAO] adicionar a lista de compras: " << item << "\n";
+
+
+static std::string caminho_db() {
+    if (const char* e = std::getenv("ASSISTENTE_DB")) return e;
+    const char* home = std::getenv("HOME");
+    return std::string(home ? home : ".") + "/Assistente/Dados/Assistente.db";
 }
-void acao_listar_compras() {
-    std::cout << "[ACAO] falar a lista de compras\n";
+
+// "2026-10-28T15:00" -> "28/10 às 15:00" ; "2026-10-28" -> "28/10"
+// (a data já foi validada pelo regex ao gravar)
+static std::string data_para_fala(const std::string& iso) {
+    std::string s = iso.substr(8, 2) + "/" + iso.substr(5, 2);
+    if (iso.size() >= 16) s += " às " + iso.substr(11, 5);
+    return s;
 }
-void acao_agendar_tarefa(const std::string& descricao, const std::string& data) {
-    std::cout << "[ACAO] agendar: \"" << descricao << "\" em \""
-              << (data.empty() ? "(sem data)" : data) << "\"\n";
+
+void acao_adicionar_compra(Armazenamento& db, const std::string& item) {
+    db.adicionar_compra(item);
+    acao_responder(item + " adicionado à lista de compras.");
 }
-void acao_listar_tarefas() {
-    std::cout << "[ACAO] falar tarefas/eventos agendados\n";
+
+void acao_listar_compras(Armazenamento& db) {
+    auto itens = db.listar_compras();
+    if (itens.empty()) { acao_responder("Sua lista de compras está vazia."); return; }
+    std::string fala = "Na sua lista tem: ";
+    for (size_t i = 0; i < itens.size(); i++)
+        fala += itens[i] + (i + 1 < itens.size() ? ", " : ".");
+    acao_responder(fala);
 }
+
+void acao_agendar_tarefa(Armazenamento& db, const std::string& desc, const std::string& data) {
+    try {
+        db.agendar_tarefa(desc, data);
+    } catch (const std::invalid_argument&) {
+        acao_responder("Não entendi a data do compromisso.");
+        return;
+    }
+    std::string fala = "Agendado: " + desc;
+    if (!data.empty()) fala += ", " + data_para_fala(data);
+    acao_responder(fala + ".");
+}
+
+void acao_listar_tarefas(Armazenamento& db) {
+    auto ts = db.listar_tarefas(7);
+    if (ts.empty()) { acao_responder("Você não tem compromissos nos próximos 7 dias."); return; }
+    std::string fala = "Seus compromissos: ";
+    for (size_t i = 0; i < ts.size(); i++) {
+        fala += ts[i].descricao + ", " + data_para_fala(ts[i].data_hora);
+        fala += (i + 1 < ts.size()) ? "; " : ".";
+    }
+    acao_responder(fala);
+}
+
 void acao_informar_clima() {
     std::cout << "[ACAO] buscar e falar o clima\n";
 }
 void acao_informar_data_atual() {
     std::cout << "[ACAO] falar a data de hoje\n";
 }
-void acao_responder(const std::string& texto) {
-    std::cout << "[ACAO] falar (TTS): " << texto << "\n";
-}
-
 // ======================================================================
 // Mapeamento tipo_comando (string do JSON) -> enum
 // ======================================================================
@@ -83,7 +127,7 @@ static int erro_comando(const std::string& msg) {
 // ======================================================================
 // Despachante: valida o JSON e chama a ação correspondente
 // ======================================================================
-static int despachar(const json& raiz) {
+static int despachar(const json& raiz, Armazenamento& db) {
     if (!raiz.is_object())
         return erro_comando("o JSON raiz não é um objeto");
 
@@ -115,13 +159,13 @@ static int despachar(const json& raiz) {
         case Tipo::AdicionarCompras: {
             const std::string item = campo_str(c, "item_compra");
             if (item.empty()) return erro_comando("item_compra ausente");
-            acao_adicionar_compra(item);
+              acao_adicionar_compra(db, item);
             break;
         }
         case Tipo::AgendarTarefa: {
             const std::string desc = campo_str(c, "descricao_evento");
             if (desc.empty()) return erro_comando("descricao_evento ausente");
-            acao_agendar_tarefa(desc, campo_str(c, "data_evento"));  // data pode vir vazia
+            acao_agendar_tarefa(db, desc, campo_str(c, "data_evento"));  // data pode vir vazia
             break;
         }
         case Tipo::ConversaGeral: {
@@ -130,8 +174,8 @@ static int despachar(const json& raiz) {
             acao_responder(txt);
             break;
         }
-        case Tipo::ListarCompras:  acao_listar_compras();      break;
-        case Tipo::ListarTarefas:  acao_listar_tarefas();      break;
+        case Tipo::ListarCompras:  acao_listar_compras(db);      break;
+        case Tipo::ListarTarefas:  acao_listar_tarefas(db);      break;
         case Tipo::Clima:          acao_informar_clima();      break;
         case Tipo::DataAtual:      acao_informar_data_atual(); break;
     }
@@ -180,5 +224,12 @@ int main(int argc, char** argv) {
     }
 
     std::cerr << "[Info] lendo " << alvo << "\n";
-    return despachar(raiz);
+    try {
+        Armazenamento db(caminho_db());
+        return despachar(raiz, db);
+    } catch (const std::exception& e) {
+        std::cerr << "[ERRO] " << e.what() << "\n";
+        acao_responder("Tive um problema ao acessar a agenda.");
+        return 4;
+    }
 }

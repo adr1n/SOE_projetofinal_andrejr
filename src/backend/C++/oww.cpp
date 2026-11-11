@@ -5,8 +5,18 @@
 #include <deque>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
+#include <filesystem>
 
+namespace fs = std::filesystem;
 constexpr int SR = 16000, CHUNK = 1280, CTX = 480;
+
+// Pasta onde o executável está (Linux: /proc/self/exe é um link para ele).
+static fs::path pasta_do_executavel() {
+    std::error_code ec;
+    fs::path p = fs::read_symlink("/proc/self/exe", ec);
+    return ec ? fs::current_path() : p.parent_path();
+}
 
 static Ort::SessionOptions opts() {
     Ort::SessionOptions o;
@@ -72,7 +82,24 @@ struct Detector {
     }
 };
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    // 1) OWW_MODELS, se definida; 2) senão, <pasta do executável>/models
+    fs::path dir_modelos = std::getenv("OWW_MODELS")
+                               ? fs::path(std::getenv("OWW_MODELS"))
+                               : pasta_do_executavel() / "models";
+    // Nome do modelo da wake word: 1º argumento, ou alexa por padrão
+    std::string modelo = (argc >= 2) ? argv[1] : "alexa_v0.1.onnx";
+
+    // Falha cedo, com mensagem clara, se faltar algum arquivo
+    for (const fs::path& f : {dir_modelos / "melspectrogram.onnx",
+                              dir_modelos / "embedding_model.onnx",
+                              dir_modelos / modelo}) {
+        if (!fs::exists(f)) {
+            std::cerr << "[ERRO] modelo não encontrado: " << f << "\n";
+            return 1;
+        }
+    }
     Detector det(std::string(getenv("HOME")) + "/Testes/testeWakeWord/models",
                  "alexa_v0.1.onnx");
 
