@@ -1,88 +1,183 @@
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <cstdlib>
-#include <sys/stat.h>
-#include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
 
-// Configurações de Caminhos e Voz
-const std::string PIPER_BIN = "../.venv/bin/piper";
-const std::string MODEL_PATH = "./models/pt_BR-edresson-low.onnx";
-const std::string CACHE_DIR = "./audio_cache";
+using json = nlohmann::json;
 
-// Função utilitária para verificar se um arquivo existe
-bool arquivo_existe(const std::string& caminho) {
-    struct stat buffer;
-    return (stat(caminho.c_str(), &buffer) == 0);
+// Função auxiliar simples para decodificar Base64 e salvar como binário (WAV)
+// (Base64 decode padrão em C++)
+static const std::string base64_chars = 
+             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+             "abcdefghijklmnopqrstuvwxyz"
+             "0123456789+/";
+
+inline bool is_base64(unsigned char c) {
+    return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-// Cria diretórios necessários se não existirem
-void inicializar_diretorios() {
-    system("mkdir -p ./audio_cache");
-}
+std::vector<unsigned char> base64_decode(const std::string& encoded_string) {
+    int in_len = encoded_string.size();
+    int i = 0, j = 0, in_ = 0;
+    unsigned char char_array_4[4], char_array_3[3];
+    std::vector<unsigned char> ret;
 
-// Normaliza o texto para criar um nome de arquivo de cache seguro
-std::string gerar_nome_cache(const std::string& texto) {
-    std::string nome = texto;
-    // Converte para minúsculas e substitui caracteres não alfanuméricos por "_"
-    std::transform(nome.begin(), nome.end(), nome.begin(), ::tolower);
-    for (char& c : nome) {
-        if (!isalnum(c)) {
-            c = '_';
+    while (in_len-- && (encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
+        char_array_4[i++] = encoded_string[in_]; in_++;
+        if (i == 4) {
+            for (i = 0; i < 4; i++)
+                char_array_4[i] = base64_chars.find(char_array_4[i]);
+
+            char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+            for (i = 0; (i < 3); i++)
+                ret.push_back(char_array_3[i]);
+            i = 0;
         }
     }
-    // Limita o tamanho para evitar nomes de arquivos gigantescos
-    if (nome.length() > 30) {
-        nome = nome.substr(0, 30);
+
+    if (i) {
+        for (j = i; j < 4; j++)
+            char_array_4[j] = 0;
+
+        for (j = 0; j < 4; j++)
+            char_array_4[j] = base64_chars.find(char_array_4[j]);
+
+        char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+        char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+        for (j = 0; (j < i - 1); j++)
+            ret.push_back(char_array_3[j]);
     }
-    return CACHE_DIR + "/" + nome + ".wav";
+
+    return ret;
 }
 
-// Função principal de síntese e reprodução de voz
-void sintetizar_e_falar(const std::string& texto, bool usar_cache = true) {
-    std::string caminho_cache = gerar_nome_cache(texto);
-
-    // 1. Se for frase fixa e o arquivo de cache já existir, toca instantaneamente via aplay
-    if (usar_cache && arquivo_existe(caminho_cache)) {
-        std::cout << "[Cache Hit]: Tocando áudio estático para: \"" << texto << "\"" << std::endl;
-        std::string cmd_tocar = "aplay -q " + caminho_cache;
-        system(cmd_tocar.c_str());
-        return;
-    }
-
-    // 2. Se não estiver em cache (ou se usar_cache for falso), gera o arquivo WAV com o Piper
-    std::cout << "[TTS Dinâmico]: Sintetizando com Piper..." << std::endl;
-    
-    // Monta o comando do piper salvando diretamente no arquivo de cache
-    // Usamos pipes do sistema para injetar o texto via STDIN de forma segura
-    std::string comando_piper = "echo \"" + texto + "\" | " + PIPER_BIN + " --model " + MODEL_PATH + " --output_file " + caminho_cache;
-    
-    int status = system(comando_piper.c_str());
-    if (status != 0) {
-        std::cerr << "[Erro]: Falha ao executar o Piper para síntese de voz." << std::endl;
-        return;
-    }
-
-    // 3. Reproduz o áudio recém-gerado
-    std::string cmd_tocar = "aplay -q " + caminho_cache;
-    system(cmd_tocar.c_str());
+// Callback do cURL
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
+    size_t totalSize = size * nmemb;
+    userp->append((char*)contents, totalSize);
+    return totalSize;
 }
 
-int main() {
-    inicializar_diretorios();
+bool gerarAudioGoogleTTS(const std::string& texto, const std::string& apiKey, const std::string& outputFile) {
+    CURL* curl;
+    CURLcode res;
+    std::string readBuffer;
 
-    // Teste 1: Frases Fixas (A primeira gera o cache, a segunda usa o Cache Hit instantâneo)
-    std::cout << "\n--- Teste 1: Frases Fixas (Com Cache) ---" << std::endl;
-    sintetizar_e_falar("Lâmpada ligada.");
-    sintetizar_e_falar("Lâmpada ligada."); // Deve disparar o Cache Hit
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    curl = curl_easy_init();
 
-    sintetizar_e_falar("Não entendi. Poderia repetir?");
+    if(!curl) {
+        std::cerr << "[Erro]: Falha ao inicializar o cURL." << std::endl;
+        return false;
+    }
 
-    // Teste 2: Frases Dinâmicas (Respostas livres vindas do Gemini)
-    std::cout << "\n--- Teste 2: Resposta Dinâmica do Gemini ---" << std::endl;
-    std::string resposta_gemini = "Adicionei leite e pão na sua lista de compras com sucesso.";
-    sintetizar_e_falar(resposta_gemini, false); // usar_cache = false para textos que não se repetem
+    std::string url = "https://texttospeech.googleapis.com/v1/text:synthesize?key=" + apiKey;
+
+    json payload = {
+        {"input", {{"text", texto}}},
+        {"voice", {
+            {"languageCode", "pt-BR"},
+            {"name", "pt-BR-Neural2-B"},
+            {"ssmlGender", "MALE"}
+        }},
+        {"audioConfig", {
+            {"audioEncoding", "LINEAR16"}
+        }}
+    };
+
+    std::string jsonStr = payload.dump();
+
+    struct curl_slist* headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonStr.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+    res = curl_easy_perform(curl);
+
+    if(res != CURLE_OK) {
+        std::cerr << "[Erro cURL]: " << curl_easy_strerror(res) << std::endl;
+        curl_easy_cleanup(curl);
+        curl_global_cleanup();
+        return false;
+    }
+
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+
+    try {
+        json responseJson = json::parse(readBuffer);
+        
+        if (responseJson.contains("audioContent")) {
+            std::string audioBase64 = responseJson["audioContent"];
+            
+            // Decodifica o Base64 recebido para bytes binários do WAV
+            std::vector<unsigned char> audioBytes = base64_decode(audioBase64);
+
+            // Salva no arquivo de saída .wav
+            std::ofstream outfile(outputFile, std::ios::binary);
+            if (!outfile.is_open()) {
+                std::cerr << "[Erro]: Não foi possível criar o arquivo de áudio em: " << outputFile << std::endl;
+                return false;
+            }
+            outfile.write((char*)audioBytes.data(), audioBytes.size());
+            outfile.close();
+
+            std::cout << "[TTS]: Áudio gerado e salvo com sucesso em " << outputFile << "!\n";
+            return true;
+        } else {
+            std::cerr << "[Erro API Google]: " << readBuffer << std::endl;
+            return false;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[Erro JSON]: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+int main(int argc, char* argv[]) {
+    // Uso esperado pelo script shell: ./piper/tts_manager <arquivo_texto.txt> <API_KEY> <saida.wav>
+    if (argc < 4) {
+        std::cerr << "Uso: " << argv[0] << " <arquivo_texto.txt> <API_KEY> <saida.wav>\n";
+        return 1;
+    }
+
+    std::string arquivoPath = argv[1];
+    std::string apiKey = argv[2];
+    std::string outputFile = argv[3];
+
+    // Lê o texto que será transformado em áudio a partir do arquivo
+    std::ifstream arquivo(arquivoPath);
+    if (!arquivo.is_open()) {
+        std::cerr << "[Erro]: Não foi possível abrir o arquivo de texto: " << arquivoPath << "\n";
+        return 1;
+    }
+
+    std::stringstream buffer;
+    buffer << arquivo.rdbuf();
+    std::string texto = buffer.str();
+    arquivo.close();
+
+    if (texto.empty()) {
+        std::cout << "[TTS]: O arquivo de texto está vazio. Nada para sintetizar.\n";
+        return 0;
+    }
+
+    std::cout << "[TTS]: Solicitando áudio para a API do Google Cloud...\n";
+    if (!gerarAudioGoogleTTS(texto, apiKey, outputFile)) {
+        return 1;
+    }
 
     return 0;
 }
-
