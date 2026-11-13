@@ -36,7 +36,8 @@ static void uso() {
 
 int main(int argc, char** argv) {
     ConfigGemini cfg;
-    std::string arq_chave = "API/gemini_api.txt";
+    //std::string chave = "API/gemini_api.txt";
+    std::string chave = std::getenv("GEMINI_API");
     std::string pasta = "Comandos";
     std::string arq_texto;
     bool salvar = true;
@@ -50,7 +51,7 @@ int main(int argc, char** argv) {
                 return argv[++i];
             };
             if (a == "-f")                arq_texto = valor();
-            else if (a == "-k")           arq_chave = valor();
+            else if (a == "-k")           chave = valor();
             else if (a == "-m")           cfg.modelo = valor();
             else if (a == "-t")           cfg.thinking_level = valor();
             else if (a == "-o")           pasta = valor();
@@ -87,7 +88,8 @@ int main(int argc, char** argv) {
                   "..",
                   "Oi"};
     }
-
+    
+    /*
     std::string chave;
     try {
         chave = carregar_chave(arq_chave);   // nunca é impressa nem registrada em log
@@ -95,7 +97,7 @@ int main(int argc, char** argv) {
         std::cerr << "[ERRO] " << e.what() << "\n";
         return 1;
     }
-
+    */
     int falhas = 0;
     for (const std::string& texto : textos) {
         std::cerr << "\n[Entrada Voz]: \"" << texto << "\"\n";

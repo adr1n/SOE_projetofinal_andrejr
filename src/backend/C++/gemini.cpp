@@ -215,6 +215,7 @@ Comando extrair_comando(const std::string& corpo) {
 
 // ---------------------------------------------------------------------------
 
+/*
 std::string carregar_chave(const std::string& arquivo) {
     if (const char* env = std::getenv("GEMINI_API_KEY")) {
         const std::string k = trim(env);
@@ -230,6 +231,7 @@ std::string carregar_chave(const std::string& arquivo) {
     if (chave.empty()) throw std::runtime_error("arquivo da chave está vazio: " + arquivo);
     return chave;
 }
+*/
 
 ResultadoGemini processar_comando_voz(const ConfigGemini& cfg, const std::string& chave,
                                       const std::string& texto_transcrito) {
@@ -281,3 +283,4 @@ std::string salvar_comando(const Comando& comando, const std::string& pasta) {
     if (ec) throw std::runtime_error("não foi possível renomear para " + destino.string() + ": " + ec.message());
     return destino.string();
 }
+

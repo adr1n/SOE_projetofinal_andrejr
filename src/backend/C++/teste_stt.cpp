@@ -32,7 +32,7 @@ static void uso() {
 
 int main(int argc, char** argv) {
     ConfigSTT cfg;
-    std::string arq_chave = "API/groq_whisper_api";
+    std::string chave;
     std::string arq_saida = "comando_voz.txt";
     double duracao = 5.0;
     double rms_min = 0.0;
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
             if (a == "--listar")      listar = true;
             else if (a == "-d")       duracao = std::stod(valor());
             else if (a == "-i")       cfg.dispositivo = std::stoi(valor());
-            else if (a == "-k")       arq_chave = valor();
+            else if (a == "-k")       chave = valor();
             else if (a == "-m")       cfg.modelo = valor();
             else if (a == "-o")       arq_saida = valor();
             else if (a == "-r")       rms_min = std::stod(valor());
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         if (listar) { listar_dispositivos(); return 0; }
 
         // A chave é lida do arquivo e nunca é impressa nem registrada em log.
-        const std::string chave = ler_chave(arq_chave);
+        const std::string chave = std::getenv("GROQ_API"); //ler_chave(arq_chave);
 
         std::cerr << "[STT Groq]: Gravando comando por " << duracao << " segundos...\n";
         const std::vector<int16_t> pcm = gravar_audio(cfg, duracao);

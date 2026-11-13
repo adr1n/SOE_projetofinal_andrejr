@@ -148,15 +148,24 @@ bool gerarAudioGoogleTTS(const std::string& texto, const std::string& apiKey, co
 
 int main(int argc, char* argv[]) {
     // Uso esperado pelo script shell: ./piper/tts_manager <arquivo_texto.txt> <API_KEY> <saida.wav>
+    
+
+    std::string arquivoPath;
+    std::string apiKey;
+    std::string outputFile;
     if (argc < 4) {
         std::cerr << "Uso: " << argv[0] << " <arquivo_texto.txt> <API_KEY> <saida.wav>\n";
         return 1;
     }
-
-    std::string arquivoPath = argv[1];
-    std::string apiKey = argv[2];
-    std::string outputFile = argv[3];
-
+    if(argc>1){
+	arquivoPath = argv[1];
+	apiKey = argv[2];
+	outputFile = argv[3];
+    }else{
+	arquivoPath = "Texto/comando.txt";
+        apiKey = std::getenv("GEMINI_API");
+	outputFile = "Audio/saida.wav";
+    }
     // Lê o texto que será transformado em áudio a partir do arquivo
     std::ifstream arquivo(arquivoPath);
     if (!arquivo.is_open()) {

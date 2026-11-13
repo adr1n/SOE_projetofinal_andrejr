@@ -72,7 +72,7 @@ struct ListaGuarda {
 }  // namespace
 
 // ---------------------------------------------------------------------------
-
+/*
 std::string ler_chave(const std::string& caminho) {
     std::ifstream f(caminho);
     if (!f) throw std::runtime_error("não foi possível abrir o arquivo da chave: " + caminho);
@@ -82,7 +82,7 @@ std::string ler_chave(const std::string& caminho) {
     if (chave.empty()) throw std::runtime_error("arquivo da chave está vazio: " + caminho);
     return chave;
 }
-
+*/
 std::vector<int16_t> gravar_audio(const ConfigSTT& cfg, double duracao_s) {
     if (duracao_s <= 0) throw ErroAudio("duração de gravação inválida");
 

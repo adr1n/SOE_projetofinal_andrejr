@@ -28,7 +28,7 @@ struct ResultadoGemini {
 
 // Chave da API: a variável de ambiente GEMINI_API_KEY tem prioridade; senão lê o arquivo.
 // Lança std::runtime_error se não encontrar.
-std::string carregar_chave(const std::string& arquivo = "API/gemini_api.txt");
+//std::string carregar_chave(const std::string& arquivo = "API/gemini_api.txt");
 
 // Envia o texto ao Gemini e devolve o comando estruturado. Nunca lança exceção:
 // em qualquer falha, devolve ok=false e o comando de contingência (CONVERSA_GERAL),

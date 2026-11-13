@@ -25,7 +25,7 @@ struct ConfigSTT {
 
 // Lê a chave de API de um arquivo (descarta espaços e quebras de linha).
 // Lança std::runtime_error se o arquivo não abrir ou estiver vazio.
-std::string ler_chave(const std::string& caminho);
+//std::string ler_chave(const std::string& caminho);
 
 // Grava 'duracao_s' segundos do microfone (mono, int16, cfg.taxa Hz). Lança ErroAudio.
 std::vector<int16_t> gravar_audio(const ConfigSTT& cfg, double duracao_s);
