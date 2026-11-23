@@ -2,6 +2,7 @@
 #include <string>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp> // Certifique-se de ter o header no projeto
+#include "telegram_bot.hpp"
 
 using json = nlohmann::json;
 
@@ -84,6 +85,7 @@ void conferirAtualizacoes(const std::string& token) {
     }
 }
 
+#ifndef TELEGRAM_AS_LIB
 int main() {
     std::string token = std::getenv("TELEGRAM_TOKEN");
     std::string chatId = std::getenv("TELEGRAM_CHATID");
@@ -96,3 +98,4 @@ int main() {
 
     return 0;
 }
+#endif

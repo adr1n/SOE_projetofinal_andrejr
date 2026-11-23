@@ -4,6 +4,11 @@
 src/backend/Python/API/
 *.venv
 src/backend/Python/Comandos
+src/backend/API
+src/backend/Dados
+src/backend/wakeword/models
+src/backend/wakeword/libs
+
 # Adicione outros arquivos a serem ignorados aqui
 # ...
 

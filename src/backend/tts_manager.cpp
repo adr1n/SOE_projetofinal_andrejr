@@ -1,3 +1,4 @@
+#include "tts_manager.hpp"
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -73,7 +74,16 @@ size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* use
 
 // Síntese de voz usando a API do Google Gemini (Generative Language API)
 // Vozes disponíveis: "Puck", "Charon", "Aoede", "Fenrir", "Kore"
-bool gerarAudioGeminiTTS(const std::string& texto, const std::string& apiKey, const std::string& outputFile, const std::string& voz = "Puck") {
+bool gerarAudioGeminiTTS(const std::string& texto, const std::string& apiKey, const std::string& outputFile, const std::string& voz) {
+    static const CURLcode curl_init = curl_global_init(CURL_GLOBAL_DEFAULT);
+    (void)curl_init;
+
+    std::string key = apiKey.empty() ? obterChaveGemini() : apiKey;
+    if (key.empty()) {
+        std::cerr << "[Erro TTS]: Chave da API do Gemini não encontrada!\n";
+        return false;
+    }
+
     CURL* curl = curl_easy_init();
     if (!curl) {
         std::cerr << "[Erro]: Falha ao inicializar o cURL." << std::endl;
@@ -105,7 +115,7 @@ bool gerarAudioGeminiTTS(const std::string& texto, const std::string& apiKey, co
 
     struct curl_slist* headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/json");
-    headers = curl_slist_append(headers, ("x-goog-api-key: " + apiKey).c_str());
+    headers = curl_slist_append(headers, ("x-goog-api-key: " + key).c_str());
 
     std::string readBuffer;
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -215,6 +225,7 @@ std::string obterChaveGemini(const std::string& argChave) {
     return "";
 }
 
+#ifndef TTS_AS_LIB
 static void uso(const char* prog) {
     std::cerr << "Uso: " << prog << " [texto ou arquivo.txt] [chave_opcional] [saida.wav] [voz]\n"
               << "Opções de voz: Puck (padrão), Charon, Aoede, Fenrir, Kore\n"
@@ -272,3 +283,4 @@ int main(int argc, char* argv[]) {
     curl_global_cleanup();
     return ok ? 0 : 1;
 }
+#endif
