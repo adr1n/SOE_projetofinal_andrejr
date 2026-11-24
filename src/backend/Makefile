@@ -84,7 +84,7 @@ telegram_bot: $(BUILD)/telegram_bot.o
 
 # assistente: integrador principal com FSM, Pipes e Sinais POSIX
 $(ASSISTENTE_BIN): CXXFLAGS += -O3 -I$(ORT)/include -I$(WW)
-$(ASSISTENTE_BIN): $(BUILD)/assistente.o $(BUILD)/oww_lib.o $(BUILD)/tts_manager_lib.o $(BUILD)/stt.o $(BUILD)/gemini.o $(BUILD)/armazenamento.o
+$(ASSISTENTE_BIN): $(BUILD)/assistente.o $(BUILD)/oww_lib.o $(BUILD)/tts_manager_lib.o $(BUILD)/stt.o $(BUILD)/gemini.o $(BUILD)/armazenamento.o $(BUILD)/telegram_bot_lib.o
 	$(CXX) $^ -o $@ -L$(ORT)/lib -lonnxruntime -lportaudio -lcurl -lsqlite3 -lpthread -lasound -Wl,-rpath,$(ORT)/lib
 
 $(BUILD)/oww_lib.o: $(WW)/oww.cpp | $(BUILD)
@@ -93,7 +93,7 @@ $(BUILD)/oww_lib.o: $(WW)/oww.cpp | $(BUILD)
 $(BUILD)/tts_manager_lib.o: tts_manager.cpp | $(BUILD)
 	$(CXX) $(CXXFLAGS) -DTTS_AS_LIB -c $< -o $@
 
-$(BUILD)/telegram_bot_lib.o: tts_manager.cpp | $(BUILD)
+$(BUILD)/telegram_bot_lib.o: telegram_bot.cpp | $(BUILD)
 	$(CXX) $(CXXFLAGS) -DTELEGRAM_AS_LIB -c $< -o $@
 
 # atalho: "make oww" gera wakeword/oww
